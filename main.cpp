@@ -2,7 +2,7 @@
 
 #define READLIST(lst, idx) ((lst & (0b11 << (2*idx))) >> (2*idx))
 #define MAP_H 20
-#define MAP_W 20
+#define MAP_W 100
 
 enum direction
     {
@@ -41,14 +41,14 @@ enum block
     // ...
     };
 
-#define HTV_PROB_SNGL 40
+#define HTV_PROB_SNGL 10
 #define HTV_PROB_BOTH (HTV_PROB_SNGL*HTV_PROB_SNGL/100)
 
-#define VTH_PROB_BOTH 30
-#define VTH_PROB_SNGL 40
+#define VTH_PROB_SNGL 20
+#define VTH_PROB_BOTH (VTH_PROB_SNGL*VTH_PROB_SNGL/100)
 
 #define VRT_PROB_CONT 70
-#define HRT_PROB_CONT 60
+#define HRT_PROB_CONT 95
 
 #define CSTM_SEC_PROB 5
 #define CSTM_SIZE_FACTOR 5
@@ -208,7 +208,7 @@ void generate (block map [][MAP_H], uint8_t pmap [][MAP_H],
         map [x][y] = block::entry;
         
         // Exclude current direction from selected ones
-    dir_sel &= (~dir);
+    dir_sel &= (~getNegativeDir(dir));
     
     // Generate new map_gens
     uint8_t dirlst = getRandomDirectionsList();
@@ -243,9 +243,9 @@ void printMap (block map [][MAP_H])
         {
         for (int x = 0; x < MAP_W; x++)
             if (map [x][y] == 0)
-                std::cout << " ";
+                std::cout << "  ";
             else
-                std::cout << (char)map [x][y];
+                std::cout << (char)map [x][y] << " ";
         
         std::cout << std::endl;
         }
@@ -258,8 +258,8 @@ int main ()
     block map          [MAP_W][MAP_H] = {};
     uint8_t priority_map [MAP_W][MAP_H] = {};
     
-    int x0 = 10, y0 = MAP_H - 10;
-    direction d = right;
+    int x0 = MAP_W/2, y0 = MAP_H/2;
+    int d = (1<<(rand ()%4));
     
     /*
          {-------<T>-----]
