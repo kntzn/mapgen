@@ -1,8 +1,8 @@
 #include <iostream>
 
 #define READLIST(lst, idx) ((lst & (0b11 << (2*idx))) >> (2*idx))
-#define MAP_H 100
-#define MAP_W 100
+#define MAP_H 20
+#define MAP_W 20
 
 enum direction
     {
@@ -189,9 +189,14 @@ uint8_t getRandomDirectionsList ()
 void generate (block map [][MAP_H], uint8_t pmap [][MAP_H],
                int x, int y, uint8_t dir, uint8_t priority)
     {
+    std::cout << x << ' ' << y << std::endl << std::flush;
+    
     // Edge detection
     if (x == 0 || x == MAP_W-1 ||
         y == 0 || y == MAP_H-1)
+        return;
+    // Overwrite detection
+    if (map [x][y] != 0)
         return;
     
     // Randomly selects further directions
@@ -199,17 +204,52 @@ void generate (block map [][MAP_H], uint8_t pmap [][MAP_H],
     
     // Sets block according to selected directions
     setblock(map, x, y, dir_sel);
-    
-    // Exclude current direction from selected ones
+    if (priority == 0)
+        map [x][y] = block::entry;
+        
+        // Exclude current direction from selected ones
     dir_sel &= (~dir);
     
     // Generate new map_gens
     uint8_t dirlst = getRandomDirectionsList();
     
+    for (int i = 0; i < 4; i++)
+        {
+        dir = (1<<READLIST(dirlst, i));
+        if (dir & dir_sel)
+            switch (dir)
+                {
+                case up:
+                    generate(map, pmap, x, y-1, up, priority-1);
+                    break;
+                case down:
+                    generate(map, pmap, x, y+1, down, priority-1);
+                    break;
+                case left:
+                    generate(map, pmap, x-1, y, left, priority-1);
+                    break;
+                case right:
+                    generate(map, pmap, x+1, y, right, priority-1);
+                    break;
+                }
+        }
     
     //goto prolong_move_label;
     }
-    
+
+void printMap (block map [][MAP_H])
+    {
+    for (int y = 0; y < MAP_H; y++)
+        {
+        for (int x = 0; x < MAP_W; x++)
+            if (map [x][y] == 0)
+                std::cout << " ";
+            else
+                std::cout << (char)map [x][y];
+        
+        std::cout << std::endl;
+        }
+    }
 
 int main ()
     {
@@ -218,7 +258,7 @@ int main ()
     block map          [MAP_W][MAP_H] = {};
     uint8_t priority_map [MAP_W][MAP_H] = {};
     
-    int x0 = 10, y0 = 80;
+    int x0 = 10, y0 = MAP_H - 10;
     direction d = right;
     
     /*
@@ -229,7 +269,8 @@ int main ()
                   |>-----]
          }-------<B
                            */
-
+    generate(map, priority_map, x0, y0, d, 0);
+    printMap(map);
     
     return 0;
     }
