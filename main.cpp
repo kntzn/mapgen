@@ -1,5 +1,6 @@
 #include <iostream>
 
+#define READLIST(lst, idx) ((lst & (0b11 << (2*idx))) >> (2*idx))
 #define MAP_H 100
 #define MAP_W 100
 
@@ -165,6 +166,26 @@ uint8_t selectDirections (uint8_t dir)
     return dir_sel;
     }
     
+uint8_t getRandomDirectionsList ()
+    {
+    uint8_t list = 0;
+    uint8_t used = 0b0000;
+    uint8_t tmp;
+    
+    while (used != 0b1111)
+        {
+        while (used & (1 << (tmp = rand () % 4)));
+        
+        used |= (1 << tmp);
+    
+        list |= tmp;
+        if (used != 0b1111)
+            list <<= 2;
+        }
+        
+    return list;
+    }
+    
 void generate (block map [][MAP_H], uint8_t pmap [][MAP_H],
                int x, int y, uint8_t dir, uint8_t priority)
     {
@@ -182,8 +203,8 @@ void generate (block map [][MAP_H], uint8_t pmap [][MAP_H],
     // Exclude current direction from selected ones
     dir_sel &= (~dir);
     
-    
-    
+    // Generate new map_gens
+    uint8_t dirlst = getRandomDirectionsList();
     
     
     //goto prolong_move_label;
@@ -192,14 +213,13 @@ void generate (block map [][MAP_H], uint8_t pmap [][MAP_H],
 
 int main ()
     {
+    srand(time(nullptr));
+    
     block map          [MAP_W][MAP_H] = {};
     uint8_t priority_map [MAP_W][MAP_H] = {};
     
     int x0 = 10, y0 = 80;
     direction d = right;
-    
-    
-    
     
     /*
          {-------<T>-----]
@@ -213,3 +233,5 @@ int main ()
     
     return 0;
     }
+
+    
