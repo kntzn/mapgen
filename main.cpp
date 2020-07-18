@@ -50,9 +50,6 @@ enum block
 #define VRT_PROB_CONT 70
 #define HRT_PROB_CONT 95
 
-#define CSTM_SEC_PROB 5
-#define CSTM_SIZE_FACTOR 5
-
 int getNegativeDir (uint8_t d)
     {
     if (d > 0b0010)
@@ -106,7 +103,20 @@ void setblock (block map [][MAP_H],
             break;
         }
     }
-
+void setCustomBlock (block map [][MAP_H],
+                     int x, int y, block b)
+    {
+    // Edge detection
+    if (x == 0 || x == MAP_W-1 ||
+        y == 0 || y == MAP_H-1)
+        return;
+    // Overwrite detection
+    if (map [x][y] != 0)
+        return;
+    
+    map [x][y] = b;
+    }
+    
 uint8_t selectDirections (uint8_t dir)
     {
     uint8_t dir_sel = getNegativeDir (dir);
@@ -185,7 +195,7 @@ uint8_t getRandomDirectionsList ()
         
     return list;
     }
-    
+ 
 void generate (block map [][MAP_H], uint8_t pmap [][MAP_H],
                int x, int y, uint8_t dir, uint8_t priority)
     {
@@ -207,7 +217,7 @@ void generate (block map [][MAP_H], uint8_t pmap [][MAP_H],
     if (priority == 0)
         map [x][y] = block::entry;
         
-        // Exclude current direction from selected ones
+    // Exclude current direction from selected ones
     dir_sel &= (~getNegativeDir(dir));
     
     // Generate new map_gens
@@ -243,9 +253,9 @@ void printMap (block map [][MAP_H])
         {
         for (int x = 0; x < MAP_W; x++)
             if (map [x][y] == 0)
-                std::cout << "  ";
+                std::cout << " ";
             else
-                std::cout << (char)map [x][y] << " ";
+                std::cout << (char)map [x][y];
         
         std::cout << std::endl;
         }
