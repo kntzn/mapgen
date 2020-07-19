@@ -229,6 +229,86 @@ void generate (block map [][MAP_H], uint8_t smap [][MAP_H],
     //goto prolong_move_label;
     }
 
+// make step in selected direction with (step_size-1)
+// if (HTV / VTH) probs matched, create
+//     if (both) then
+//         select new_step1/2 = rand ()
+//         randomly (50/50)
+//             make step in dir1/dir2
+//             or
+//                          dir2/dir
+//                          with (new_step1/2)
+//     else
+//         select new_step = rand ()
+//         make step with (new_step-1)
+//
+
+
+
+void generate2 (block map [][MAP_H], uint8_t smap [][MAP_H],
+                int x, int y, uint8_t dir, uint8_t style,
+                int step_size)
+    {
+    // Edge detection
+    if (x == 0 || x == MAP_W-1 ||
+        y == 0 || y == MAP_H-1)
+        return;
+    // Overwrite detection
+    if (map [x][y] != 0)
+        return;
+    // Tunnel end detection
+    if (step_size <= 0)
+        return;
+    
+    // Prolong current direction if end is not reached
+    uint8_t dir_sel = getNegativeDir(dir);
+    if (step_size != 1)
+        dir_sel |= dir;
+    
+    // Sets block according to selected directions & style
+    setblock(map, x, y, dir_sel);
+    smap [x][y] = style;
+    
+    // Prolong current direction if needed
+    if (dir_sel & dir)
+        ; // generate2...
+    
+    if (dir & (left | right))
+        {
+        if (rand()%2) // try up then down
+            {
+            if (rand()%100 < HTV_PROB_SNGL)
+                ;// go up
+            if (rand()%100 < HTV_PROB_SNGL)
+                ;// go down
+            }
+        else          // vice versa
+            {
+            if (rand()%100 < HTV_PROB_SNGL)
+                ;// go down
+            if (rand()%100 < HTV_PROB_SNGL)
+                ;// go up
+            }
+        }
+    else // up | down
+        {
+        if (rand()%2) // try left then right
+            {
+            if (rand()%100 < HTV_PROB_SNGL)
+                ;// go left
+            if (rand()%100 < HTV_PROB_SNGL)
+                ;// go right
+            }
+        else          // vice versa
+            {
+            if (rand()%100 < HTV_PROB_SNGL)
+                ;// go right
+            if (rand()%100 < HTV_PROB_SNGL)
+                ;// go left
+            }
+        }
+    }
+    
 void printMap (block map [][MAP_H],
                uint8_t smap [][MAP_H])
     {
@@ -273,9 +353,7 @@ int main ()
     
     return 0;
     }
-
-
-
+    
 #ifdef ABANDONED
 void setCustomBlock (block map [][MAP_H],
                      int x, int y, block b)
