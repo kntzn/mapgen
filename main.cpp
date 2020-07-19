@@ -278,87 +278,99 @@ void generate2 (block map [][MAP_H], uint8_t smap [][MAP_H],
     
     // Prolong current direction if end is not reached
     uint8_t dir_sel = getNegativeDir(dir);
-    if (step_size != 1)
+   //if (step_size != 1)
         dir_sel |= dir;
     
     // Sets current block as temporary
     map [x][y] = temp;
     
     // Prolong current direction if needed
-    if (dir_sel & dir && step_size != 1)
+    if (dir_sel & dir)
         generate2 (map, smap,
                    getXfromDir (x, dir),
                    getYfromDir (y, dir),
-                   dir, getStyle(style),
+                   dir, style,
                    step_size - 1);
-    
-    // Try perpendicular directions
-    int node_len_1 = 3 + rand ()%6; // TODO: rm test value;
-    int node_len_2 = 3 + rand ()%6; // TODO: rm test value;
-    
+        
     // TODO: code cleanup here:
+    // Try perpendicular directions
+    if (step_size < MAX_NODE_DIST - MIN_DIST_BEFORE_NODES)
     if (dir & (left | right))
         {
-        if (rand()%2) // try up then down
-            {
-            if (rand()%100 < HTV_PROB_SNGL) // go up
-                {
-                generate2(map, smap, x, y-1, up,   getStyle(style), node_len_1);
-                dir_sel |= up;
-                }
-            if (rand()%100 < HTV_PROB_SNGL) // go down
-                {
-                generate2(map, smap, x, y+1, down, getStyle(style), node_len_2);
-                dir_sel |= down;
-                }
-            }
-        else          // vice versa
-            {
-            if (rand()%100 < HTV_PROB_SNGL) // go down
-                {
-                generate2(map, smap, x, y+1, down, getStyle(style), node_len_2);
-                dir_sel |= down;
-                }
-            if (rand()%100 < HTV_PROB_SNGL) // go up
-                {
-                generate2(map, smap, x, y-1, up,   getStyle(style), node_len_1);
-                dir_sel |= up;
-                }
-            }
+        if (rand()%100 < HTV_PROB_SNGL)
+            #ifdef _FSN_ACTIVE
+            if (map [x][y-1] == 0)
+            #endif
+            dir_sel |= up;
+        if (rand()%100 < HTV_PROB_SNGL)
+            #ifdef _FSN_ACTIVE
+            if (map [x][y+1] == 0)
+            #endif
+            dir_sel |= down;
         }
-    else // up | down
+    else
         {
-        if (rand()%2) // try left then right
-            {
-            if (rand()%100 < VTH_PROB_SNGL) // go left
-                {
-                generate2(map, smap, x-1, y, left,  getStyle(style), node_len_1);
-                dir_sel |= left;
-                }
-            if (rand()%100 < VTH_PROB_SNGL) // go right
-                {
-                generate2(map, smap, x+1, y, right, getStyle(style), node_len_2);
-                dir_sel |= right;
-                }
-            }
-        else          // vice versa
-            {
-            if (rand()%100 < VTH_PROB_SNGL) // go right
-                {
-                generate2(map, smap, x+1, y, right, getStyle(style), node_len_2);
-                dir_sel |= right;
-                }
-            if (rand()%100 < VTH_PROB_SNGL) // go left
-                {
-                generate2(map, smap, x-1, y, left,  getStyle(style), node_len_1);
-                dir_sel |= left;
-                }
-            }
+        if (rand()%100 < VTH_PROB_SNGL)
+            #ifdef _FSN_ACTIVE
+            if (map [x-1][y] == 0)
+            #endif
+            dir_sel |= left;
+        if (rand()%100 < VTH_PROB_SNGL)
+            #ifdef _FSN_ACTIVE
+            if (map [x+1][y] == 0)
+            #endif
+            dir_sel |= right;
         }
     
     // Sets block according to selected directions & style
     setblock(map, x, y, dir_sel);
     smap [x][y] = style;
+    
+    // Exclude direction back and forth
+    dir_sel &= ~(getNegativeDir(dir) & dir);
+    
+    
+    // TODO: code cleanup here:
+    
+    // Launch perpendicular to the dir if needed
+    int node_len_1 = MIN_NODE_DIST + rand ()%DELTA_NODE_DIST;
+    int node_len_2 = MIN_NODE_DIST + rand ()%DELTA_NODE_DIST;
+    if (rand()%2)
+        {
+        if (dir_sel & up)
+            generate2(map, smap, x, y-1,
+                      up,   style, node_len_1);
+        if (dir_sel & down)
+            generate2(map, smap, x, y+1,
+                      down, getStyle(style), node_len_2);
+        }
+    else
+        {
+        if (dir_sel & down)
+            generate2(map, smap, x, y+1,
+                      down, style, node_len_1);
+        if (dir_sel & up)
+            generate2(map, smap, x, y-1,
+                      up,   getStyle(style), node_len_2);
+        }
+    if (rand()%2)
+        {
+        if (dir_sel & left)
+            generate2(map, smap, x-1, y,
+                      left,  style, node_len_1);
+        if (dir_sel & right)
+            generate2(map, smap, x+1, y,
+                      right, getStyle(style), node_len_2);
+        }
+    else
+        {
+        if (dir_sel & right)
+            generate2(map, smap, x+1, y,
+                      right, style, node_len_1);
+        if (dir_sel & left)
+            generate2(map, smap, x-1, y,
+                      left,  getStyle(style), node_len_2);
+        }
     }
     
 void printMap (block map [][MAP_H],

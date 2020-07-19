@@ -19,4 +19,23 @@
 
 #define STYLE_CH_PROB 5
 
+/*
+ * v2 definitions
+ * */
+#define MIN_DIST_BEFORE_NODES 2
+#define MIN_NODE_DIST 4
+#define MAX_NODE_DIST 8
+#define FILTER_SINGLE_NODES false
+
+
+// Automatic
+#define DELTA_NODE_DIST (MAX_NODE_DIST - MIN_NODE_DIST)
+#if MIN_DIST_BEFORE_NODES >= MAX_NODE_DIST
+    #error Nodes can not be created
+#endif
+#if FILTER_SINGLE_NODES
+    #define _FSN_ACTIVE
+#endif
+
+
 #endif //MAPGEN_CONFIG_H
