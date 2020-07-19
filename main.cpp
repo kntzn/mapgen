@@ -1,8 +1,7 @@
 #include <iostream>
+#include "config.h"
 
 #define READLIST(lst, idx) ((lst & (0b11 << (2*idx))) >> (2*idx))
-#define MAP_H 20
-#define MAP_W 100
 
 enum direction
     {
@@ -40,15 +39,6 @@ enum block
     // A.E.
     // ...
     };
-
-#define HTV_PROB_SNGL 10
-#define HTV_PROB_BOTH (HTV_PROB_SNGL*HTV_PROB_SNGL/100)
-
-#define VTH_PROB_SNGL 20
-#define VTH_PROB_BOTH (VTH_PROB_SNGL*VTH_PROB_SNGL/100)
-
-#define VRT_PROB_CONT 70
-#define HRT_PROB_CONT 95
 
 int getNegativeDir (uint8_t d)
     {
@@ -103,20 +93,7 @@ void setblock (block map [][MAP_H],
             break;
         }
     }
-void setCustomBlock (block map [][MAP_H],
-                     int x, int y, block b)
-    {
-    // Edge detection
-    if (x == 0 || x == MAP_W-1 ||
-        y == 0 || y == MAP_H-1)
-        return;
-    // Overwrite detection
-    if (map [x][y] != 0)
-        return;
-    
-    map [x][y] = b;
-    }
-    
+
 uint8_t selectDirections (uint8_t dir)
     {
     uint8_t dir_sel = getNegativeDir (dir);
@@ -195,12 +172,10 @@ uint8_t getRandomDirectionsList ()
         
     return list;
     }
- 
+    
 void generate (block map [][MAP_H], uint8_t pmap [][MAP_H],
                int x, int y, uint8_t dir, uint8_t priority)
     {
-    std::cout << x << ' ' << y << std::endl << std::flush;
-    
     // Edge detection
     if (x == 0 || x == MAP_W-1 ||
         y == 0 || y == MAP_H-1)
@@ -260,7 +235,9 @@ void printMap (block map [][MAP_H])
         std::cout << std::endl;
         }
     }
-
+    
+// TODO: branches merge
+// TODO: cleanup
 int main ()
     {
     srand(time(nullptr));
@@ -285,4 +262,36 @@ int main ()
     return 0;
     }
 
+
+
+#ifdef ABANDONED
+void setCustomBlock (block map [][MAP_H],
+                     int x, int y, block b)
+    {
+    // Edge detection
+    if (x == 0 || x == MAP_W-1 ||
+        y == 0 || y == MAP_H-1)
+        return;
+    // Overwrite detection
+    if (map [x][y] != 0)
+        return;
     
+    map [x][y] = b;
+    }
+#endif
+
+#ifdef ABANDONED
+std::ostream & operator<< (std::ostream &str, uint8_t list)
+    {
+    if (list & up)
+        str << "Up; ";
+    if (list & down)
+        str << "Down; ";
+    if (list & left)
+        str << "Left; ";
+    if (list & right)
+        str << "Right; ";
+    
+    return str;
+    }
+#endif

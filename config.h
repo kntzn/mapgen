@@ -1,0 +1,21 @@
+//
+// Created by kntzn on 19/07/2020.
+//
+
+#ifndef MAPGEN_CONFIG_H
+#define MAPGEN_CONFIG_H
+
+#define MAP_H 20
+#define MAP_W 100
+
+#define HTV_PROB_SNGL 10
+#define HTV_PROB_BOTH (HTV_PROB_SNGL*HTV_PROB_SNGL/100)
+
+#define VTH_PROB_SNGL 20
+#define VTH_PROB_BOTH (VTH_PROB_SNGL*VTH_PROB_SNGL/100)
+
+#define VRT_PROB_CONT 70
+#define HRT_PROB_CONT 95
+
+
+#endif //MAPGEN_CONFIG_H
