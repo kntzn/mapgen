@@ -17,5 +17,6 @@
 #define VRT_PROB_CONT 70
 #define HRT_PROB_CONT 95
 
+#define STYLE_CH_PROB 5
 
 #endif //MAPGEN_CONFIG_H

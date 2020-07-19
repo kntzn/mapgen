@@ -1,5 +1,6 @@
 #include <iostream>
 #include "config.h"
+#include "escape.h"
 
 #define READLIST(lst, idx) ((lst & (0b11 << (2*idx))) >> (2*idx))
 
@@ -10,7 +11,6 @@ enum direction
     down  = 0b0100,
     left  = 0b1000
     };
-
 enum block
         {
     // Terrain Generation
@@ -173,8 +173,16 @@ uint8_t getRandomDirectionsList ()
     return list;
     }
     
-void generate (block map [][MAP_H], uint8_t pmap [][MAP_H],
-               int x, int y, uint8_t dir, uint8_t priority)
+uint8_t getStyle (uint8_t curr_style)
+    {
+    if (rand()%100 < STYLE_CH_PROB)
+        return curr_style+1;
+    else
+        return curr_style;
+    }
+    
+void generate (block map [][MAP_H], uint8_t smap [][MAP_H],
+               int x, int y, uint8_t dir, uint8_t style)
     {
     // Edge detection
     if (x == 0 || x == MAP_W-1 ||
@@ -187,12 +195,11 @@ void generate (block map [][MAP_H], uint8_t pmap [][MAP_H],
     // Randomly selects further directions
     uint8_t dir_sel = selectDirections(dir);
     
-    // Sets block according to selected directions
+    // Sets block according to selected directions & style
     setblock(map, x, y, dir_sel);
-    if (priority == 0)
-        map [x][y] = block::entry;
-        
-    // Exclude current direction from selected ones
+    smap [x][y] = style;
+    
+    // Exclude inverted current direction from selected ones
     dir_sel &= (~getNegativeDir(dir));
     
     // Generate new map_gens
@@ -205,16 +212,16 @@ void generate (block map [][MAP_H], uint8_t pmap [][MAP_H],
             switch (dir)
                 {
                 case up:
-                    generate(map, pmap, x, y-1, up, priority-1);
+                    generate(map, smap, x, y-1, up, getStyle(style));
                     break;
                 case down:
-                    generate(map, pmap, x, y+1, down, priority-1);
+                    generate(map, smap, x, y+1, down, getStyle(style));
                     break;
                 case left:
-                    generate(map, pmap, x-1, y, left, priority-1);
+                    generate(map, smap, x-1, y, left, getStyle(style));
                     break;
                 case right:
-                    generate(map, pmap, x+1, y, right, priority-1);
+                    generate(map, smap, x+1, y, right, getStyle(style));
                     break;
                 }
         }
@@ -222,16 +229,21 @@ void generate (block map [][MAP_H], uint8_t pmap [][MAP_H],
     //goto prolong_move_label;
     }
 
-void printMap (block map [][MAP_H])
+void printMap (block map [][MAP_H],
+               uint8_t smap [][MAP_H])
     {
     for (int y = 0; y < MAP_H; y++)
         {
         for (int x = 0; x < MAP_W; x++)
-            if (map [x][y] == 0)
+            {
+            std::cout << console::SGR (30 + smap [x][y]%8);
+            
+            if (map[x][y] == 0)
                 std::cout << " ";
             else
-                std::cout << (char)map [x][y];
-        
+                std::cout << (char) map[x][y];
+            }
+            
         std::cout << std::endl;
         }
     }
@@ -243,7 +255,7 @@ int main ()
     srand(time(nullptr));
     
     block map          [MAP_W][MAP_H] = {};
-    uint8_t priority_map [MAP_W][MAP_H] = {};
+    uint8_t style_map [MAP_W][MAP_H] = {};
     
     int x0 = MAP_W/2, y0 = MAP_H/2;
     int d = (1<<(rand ()%4));
@@ -256,8 +268,8 @@ int main ()
                   |>-----]
          }-------<B
                            */
-    generate(map, priority_map, x0, y0, d, 0);
-    printMap(map);
+    generate(map, style_map, x0, y0, d, 0);
+    printMap(map, style_map);
     
     return 0;
     }

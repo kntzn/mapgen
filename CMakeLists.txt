@@ -3,4 +3,4 @@ project(mapgen)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(mapgen main.cpp config.h)
+add_executable(mapgen main.cpp config.h escape.h)
