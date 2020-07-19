@@ -35,6 +35,7 @@ enum block
     ladder            = 179,
     
     custom_section    = 219,
+    temp              = 253
     
     // A.E.
     // ...
@@ -243,7 +244,22 @@ void generate (block map [][MAP_H], uint8_t smap [][MAP_H],
 //         make step with (new_step-1)
 //
 
-
+int getXfromDir (int x, uint8_t dir)
+    {
+    if (dir & left)
+        x--;
+    if (dir & right)
+        x++;
+    return x;
+    }
+int getYfromDir (int y, uint8_t dir)
+    {
+    if (dir & up)
+        y--;
+    if (dir & down)
+        y++;
+    return y;
+    }
 
 void generate2 (block map [][MAP_H], uint8_t smap [][MAP_H],
                 int x, int y, uint8_t dir, uint8_t style,
@@ -265,48 +281,84 @@ void generate2 (block map [][MAP_H], uint8_t smap [][MAP_H],
     if (step_size != 1)
         dir_sel |= dir;
     
-    // Sets block according to selected directions & style
-    setblock(map, x, y, dir_sel);
-    smap [x][y] = style;
+    // Sets current block as temporary
+    map [x][y] = temp;
     
     // Prolong current direction if needed
-    if (dir_sel & dir)
-        ; // generate2...
+    if (dir_sel & dir && step_size != 1)
+        generate2 (map, smap,
+                   getXfromDir (x, dir),
+                   getYfromDir (y, dir),
+                   dir, getStyle(style),
+                   step_size - 1);
     
+    // Try perpendicular directions
+    int node_len_1 = 3 + rand ()%6; // TODO: rm test value;
+    int node_len_2 = 3 + rand ()%6; // TODO: rm test value;
+    
+    // TODO: code cleanup here:
     if (dir & (left | right))
         {
         if (rand()%2) // try up then down
             {
-            if (rand()%100 < HTV_PROB_SNGL)
-                ;// go up
-            if (rand()%100 < HTV_PROB_SNGL)
-                ;// go down
+            if (rand()%100 < HTV_PROB_SNGL) // go up
+                {
+                generate2(map, smap, x, y-1, up,   getStyle(style), node_len_1);
+                dir_sel |= up;
+                }
+            if (rand()%100 < HTV_PROB_SNGL) // go down
+                {
+                generate2(map, smap, x, y+1, down, getStyle(style), node_len_2);
+                dir_sel |= down;
+                }
             }
         else          // vice versa
             {
-            if (rand()%100 < HTV_PROB_SNGL)
-                ;// go down
-            if (rand()%100 < HTV_PROB_SNGL)
-                ;// go up
+            if (rand()%100 < HTV_PROB_SNGL) // go down
+                {
+                generate2(map, smap, x, y+1, down, getStyle(style), node_len_2);
+                dir_sel |= down;
+                }
+            if (rand()%100 < HTV_PROB_SNGL) // go up
+                {
+                generate2(map, smap, x, y-1, up,   getStyle(style), node_len_1);
+                dir_sel |= up;
+                }
             }
         }
     else // up | down
         {
         if (rand()%2) // try left then right
             {
-            if (rand()%100 < HTV_PROB_SNGL)
-                ;// go left
-            if (rand()%100 < HTV_PROB_SNGL)
-                ;// go right
+            if (rand()%100 < VTH_PROB_SNGL) // go left
+                {
+                generate2(map, smap, x-1, y, left,  getStyle(style), node_len_1);
+                dir_sel |= left;
+                }
+            if (rand()%100 < VTH_PROB_SNGL) // go right
+                {
+                generate2(map, smap, x+1, y, right, getStyle(style), node_len_2);
+                dir_sel |= right;
+                }
             }
         else          // vice versa
             {
-            if (rand()%100 < HTV_PROB_SNGL)
-                ;// go right
-            if (rand()%100 < HTV_PROB_SNGL)
-                ;// go left
+            if (rand()%100 < VTH_PROB_SNGL) // go right
+                {
+                generate2(map, smap, x+1, y, right, getStyle(style), node_len_2);
+                dir_sel |= right;
+                }
+            if (rand()%100 < VTH_PROB_SNGL) // go left
+                {
+                generate2(map, smap, x-1, y, left,  getStyle(style), node_len_1);
+                dir_sel |= left;
+                }
             }
         }
+    
+    // Sets block according to selected directions & style
+    setblock(map, x, y, dir_sel);
+    smap [x][y] = style;
     }
     
 void printMap (block map [][MAP_H],
@@ -330,6 +382,7 @@ void printMap (block map [][MAP_H],
     
 // TODO: branches merge
 // TODO: cleanup
+
 int main ()
     {
     srand(time(nullptr));
@@ -337,8 +390,8 @@ int main ()
     block map          [MAP_W][MAP_H] = {};
     uint8_t style_map [MAP_W][MAP_H] = {};
     
-    int x0 = MAP_W/2, y0 = MAP_H/2;
-    int d = (1<<(rand ()%4));
+    int x0 = 1, y0 = MAP_H/2;
+    int d = right;
     
     /*
          {-------<T>-----]
@@ -348,7 +401,7 @@ int main ()
                   |>-----]
          }-------<B
                            */
-    generate(map, style_map, x0, y0, d, 0);
+    generate2(map, style_map, x0, y0, d, 0, 5);
     printMap(map, style_map);
     
     return 0;
